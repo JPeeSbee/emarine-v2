@@ -1,18 +1,18 @@
 <?php
 
-use App\Livewire\Issuance\MarineIssuance;
-use App\Livewire\Maintenance\Agent;
-use App\Livewire\Maintenance\Location;
-use App\Livewire\Maintenance\Policy;
-use App\Livewire\Maintenance\Role;
-use App\Livewire\Maintenance\SystemSetting;
-use App\Livewire\Maintenance\User;
 use App\Livewire\Report\Posted;
 use App\Livewire\Report\Summary;
-use App\Livewire\Settings\Appearance;
-use App\Livewire\Settings\Password;
+use App\Livewire\Maintenance\Role;
+use App\Livewire\Maintenance\User;
 use App\Livewire\Settings\Profile;
+use App\Livewire\Maintenance\Agent;
+use App\Livewire\Settings\Password;
+use App\Livewire\Maintenance\Policy;
+use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Maintenance\Location;
+use App\Livewire\Issuance\MarineIssuance;
+use App\Livewire\Maintenance\SystemSetting;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -21,8 +21,6 @@ Route::get('/', function () {
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
-
-
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
