@@ -7,35 +7,35 @@
         <flux:sidebar sticky stashable class="border-r border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="mr-5 flex items-center space-x-2" wire:navigate>
+            <a href="{{ route('dashboard') }}" class="mr-5 flex items-center space-x-2">
                 <x-app-logo /> 
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="home" :href="route('home')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                <flux:navlist.item icon="home" :href="route('home')" :current="(strpos(url()->current(), route('home').'/dashboard') !== false)">{{ __('Dashboard') }}</flux:navlist.item>
             </flux:navlist>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Issuance')" class="grid">
-                    <flux:navlist.item icon="clipboard-document" :href="route('marine-issuance')" :current="request()->routeIs('marine-issuance')" wire:navigate>{{ __('Certificate Issuance') }}</flux:navlist.item>
+                    <flux:navlist.item icon="clipboard-document" :href="route('marine-issuance')" :current="(strpos(url()->current(), route('marine-issuance')) !== false)">{{ __('Certificate Issuance') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Reports')" class="grid">
-                    <flux:navlist.item icon="document-text" :href="route('report.posted')" :current="request()->routeIs('report.posted')" wire:navigate>{{ __('Posted Certificate') }}</flux:navlist.item>
-                    <flux:navlist.item icon="folder-open" :href="route('report.summary')" :current="request()->routeIs('report.summary')" wire:navigate>{{ __('Certificate Summary') }}</flux:navlist.item>
+                    <flux:navlist.item icon="document-text" :href="route('report.posted')" :current="(strpos(url()->current(), route('report.posted')) !== false)">{{ __('Posted Certificate') }}</flux:navlist.item>
+                    <flux:navlist.item icon="folder-open" :href="route('report.summary')" :current="(strpos(url()->current(), route('report.summary')) !== false)">{{ __('Certificate Summary') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Maintenance')" class="grid">
-                    <flux:navlist.item icon="user" :href="route('maintenance.user')" :current="request()->routeIs('maintenance.user')" wire:navigate>{{ __('User') }}</flux:navlist.item>
-                    <flux:navlist.item icon="key" :href="route('maintenance.role')" :current="request()->routeIs('maintenance.role')" wire:navigate>{{ __('Role') }}</flux:navlist.item>
-                    <flux:navlist.item icon="identification" :href="route('maintenance.agent')" :current="request()->routeIs('maintenance.agent')" wire:navigate>{{ __('Agent') }}</flux:navlist.item>
-                    <flux:navlist.item icon="globe-alt" :href="route('maintenance.location')" :current="request()->routeIs('maintenance.location')" wire:navigate>{{ __('Location') }}</flux:navlist.item>
-                    <flux:navlist.item icon="book-open" :href="route('maintenance.policy')" :current="request()->routeIs('maintenance.policy')" wire:navigate>{{ __('Policy') }}</flux:navlist.item>
-                    <flux:navlist.item icon="wrench" :href="route('maintenance.system-setting')" :current="request()->routeIs('maintenance.system-setting')" wire:navigate>{{ __('System Settings') }}</flux:navlist.item>
+                    <flux:navlist.item icon="user" :href="route('maintenance.user')" :current="(strpos(url()->current(), route('maintenance.user')) !== false)">{{ __('User') }}</flux:navlist.item>
+                    <flux:navlist.item icon="key" :href="route('maintenance.role')" :current="(strpos(url()->current(), route('maintenance.role')) !== false)">{{ __('Role') }}</flux:navlist.item>
+                    <flux:navlist.item icon="identification" :href="route('maintenance.agent')" :current="(strpos(url()->current(), route('maintenance.agent')) !== false)">{{ __('Agent') }}</flux:navlist.item>
+                    <flux:navlist.item icon="globe-alt" :href="route('maintenance.location')" :current="(strpos(url()->current(), route('maintenance.location')) !== false)">{{ __('Location') }}</flux:navlist.item>
+                    <flux:navlist.item icon="book-open" :href="route('maintenance.policy')" :current="(strpos(url()->current(), route('maintenance.policy')) !== false)">{{ __('Policy') }}</flux:navlist.item>
+                    <flux:navlist.item icon="wrench" :href="route('maintenance.system-setting')" :current="(strpos(url()->current(), route('maintenance.system-setting')) !== false)">{{ __('System Settings') }}</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
@@ -72,7 +72,7 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
-                        <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                        <flux:menu.item :href="route('settings.profile')" icon="cog">{{ __('Settings') }}</flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />
@@ -122,7 +122,7 @@
                     <flux:menu.separator />
 
                         <flux:menu.radio.group>
-                            <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                            <flux:menu.item :href="route('settings.profile')" icon="cog">{{ __('Settings') }}</flux:menu.item>
                         </flux:menu.radio.group>
 
                     <flux:menu.separator />
