@@ -12,9 +12,11 @@ class User extends Component
 {
     use WithPagination;
     
-    public $name, $email, $userId, $user, $editUserId = null, $showUserId = null, $showUser = null, $editUser = null, $createUser = null;
+    public $name, $email, $user;
+    public bool $showUser, $editUser, $createUser;
+    public int $editUserId, $showUserId, $userId;
     public string $search = '';
-    protected $queryString = ['search' => ['except' => '']];
+    protected $queryString = ['search' => ['except' => '']]; //for url queryString
     protected $password = 'maagap@2025';
 
     protected function rules(): array
@@ -49,14 +51,13 @@ class User extends Component
     public function render()
     {
         $users = $this->searchUsers();
-
         return view('livewire.maintenance.user', compact('users'));
     }
 
     public function create(): void
     {
-        $this->resetForm();
         $this->createUser = true;
+        $this->resetForm();
     }
 
     public function store(): void
@@ -123,14 +124,19 @@ class User extends Component
     
     public function resetUserPassword($userId): void
     {
-        $user = $this->findUser($userId);
-        $user->password = Hash::make($this->password);
-        $user->save();
+        try {
+            $user = $this->findUser($userId);
+            $user->update([
+                'password' => Hash::make($this->password)
+            ]);
 
-        session()->flash('success','Password Reset Successfully!!');
+            session()->flash('success','Password Reset Successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to reset password!!');
+        }
     }
 
-    private function searchUsers()
+    private function searchUsers(): object
     {
         return UserModel::search($this->search)->paginate(10);
     }
