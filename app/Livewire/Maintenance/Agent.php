@@ -13,17 +13,19 @@ class Agent extends Component
 {
     use WithPagination;
     
-    public $code, $name, $email, $locations, $location_id, $agentId, $agent, $editAgentId = null, $showAgentId = null, $showAgent = null, $editAgent = null, $createAgent = null;
+    public $code, $name, $email, $locations, $location_id, $agent;
+    public bool $showAgent, $editAgent, $createAgent;
+    public int $editAgentId, $showAgentId, $agentId;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
 
     protected function rules(): array 
     {
         return [
-            'code' => 'required|min:9',
-            'name' => 'required',
+            'code' => 'required|string|min:9',
+            'name' => 'required|string',
             'email' => 'required|email',
-            'location_id' => 'required',
+            'location_id' => 'required|integer',
         ];
     }
  
@@ -50,7 +52,7 @@ class Agent extends Component
     {
         $this->resetForm();
         $this->locations = Cache::remember('locations', now()->addMinutes(30), function () {
-            return DB::table('locations')->get();
+            return DB::table('locations')->whereNull('deleted_at')->get(); //need to put whereNull('deleted_at') so that we only get the active records
         });
     }
 
@@ -62,8 +64,8 @@ class Agent extends Component
 
     public function create(): void
     {
-        $this->resetForm();
         $this->createAgent = true;
+        $this->resetForm();
     }
 
     public function store(): void
@@ -89,14 +91,14 @@ class Agent extends Component
     {
         $this->showAgent = true;
         $this->showAgentId = $agentId;
-        $this->agent = AgentModel::findOrFail($this->showAgentId);
+        $this->agent = $this->findAgent($this->showAgentId);
     }
 
     public function edit($agentId): void
     {
         $this->editAgent = true;
         $this->editAgentId = $agentId;
-        $this->agent = AgentModel::findOrFail($this->editAgentId);
+        $this->agent = $this->findAgent($this->editAgentId);
         
         $this->fill($this->agent->toArray());
     }
@@ -105,7 +107,7 @@ class Agent extends Component
     {
         $this->validate();
         try {
-            $agent = AgentModel::findOrFail($this->editAgentId);
+            $agent = $this->findAgent($this->editAgentId);
             $agent->update([
                 'code' => $this->code,
                 'name' => $this->name,
@@ -123,22 +125,16 @@ class Agent extends Component
     public function deleteAgent($agentId): void 
     {
         try {
-            AgentModel::findOrFail($agentId)->delete();
+            $this->findAgent($agentId)->delete();
             session()->flash('success', 'Agent Deleted Successfully!!');
-        } catch (\Exception $e) {
+        } catch (\Throwable $th) {
             session()->flash('error', 'Failed to delete agent.');
         }
     }
 
     private function searchAgents()
     {
-        return AgentModel::with('location')
-            ->where('name', 'like', '%'.$this->search.'%')
-            ->orWhere('code', 'like', '%'.$this->search.'%')
-            ->orWhere('email', 'like', '%'.$this->search.'%')
-            ->orWhereHas('location', function($query) {
-                $query->where('name', 'like', '%'.$this->search.'%');
-            })->paginate(10);
+        return AgentModel::search($this->search)->paginate(10);
     }
 
     private function resetForm(): void
@@ -147,5 +143,10 @@ class Agent extends Component
         $this->name = null;
         $this->email = null;
         $this->location_id = null;
+    }
+
+    private function findAgent($agentId)
+    {
+        return AgentModel::findOrFail($agentId);
     }
 }

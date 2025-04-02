@@ -22,4 +22,20 @@ class Agent extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function scopeSearch($query, $search)
+    {
+        return $query->relationship()
+            ->where('name', 'like', '%'.$search.'%')
+            ->orWhere('code', 'like', '%'.$search.'%')
+            ->orWhere('email', 'like', '%'.$search.'%')
+            ->orWhereHas('location', function($q) use ($search){
+                $q->where('name', 'like', '%'.$search.'%');
+            });
+    }
+
+    public function scopeRelationship($query)
+    {
+        return $query->with(['location']);
+    }
 }

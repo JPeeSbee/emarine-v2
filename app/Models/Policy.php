@@ -20,4 +20,18 @@ class Policy extends Model
     {
         return $this->belongsTo(Agent::class);
     }
+
+    public function scopeSearch($query, $search)
+    {
+        return $query->relationship()
+            ->orWhere('policy_number', 'like', '%'.$search.'%')
+            ->orWhereHas('agent', function($q) use ($search) {
+                $q->where('name', 'like', '%'.$search.'%');
+            });
+    }
+
+    public function scopeRelationship($query)
+    {
+        return $query->with(['agent']);
+    }
 }

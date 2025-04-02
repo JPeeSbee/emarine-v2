@@ -4,35 +4,40 @@ namespace App\Livewire\Maintenance;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Location as LocationModel;
 class Location extends Component
 {
     use WithPagination;
     
-    public $address, $name, $email_recepient, $lgt_tax_rate, $locationId, $location, $editLocationId = null, $showLocationId = null, $showLocation = null, $editLocation = null, $createLocation = null;
+    public $address, $name, $email_recepient, $agents, $agent_id, $lgt_tax_rate, $location;
+    public bool $showLocation, $editLocation, $createLocation;
+    public int $editLocationId, $showLocationId, $locationId;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
 
-    protected function rules() 
+    protected function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
-            'lgt_tax_rate' => 'required',
+            'lgt_tax_rate' => 'required|decimal:2',
             'email_recepient' => 'required|string|max:255',
         ];
     }
  
-    protected function messages() 
+    protected function messages(): array
     {
         return [
             'required' => 'Please enter your :attribute.',
             'max' => 'The :attribute is too long.',
+            'decimal' => 'The :attribute will not exceed between 0.01-(1%) to 0.99-(99%)',
         ];
     }
  
-    protected function validationAttributes() 
+    protected function validationAttributes(): array
     {
         return [
             'name' => 'full name',
@@ -42,86 +47,110 @@ class Location extends Component
         ];
     }
 
-    public function mount()
+    public function mount(): void
     {
-        $this->name = null;
-        $this->address = null;
-        $this->lgt_tax_rate = null;
-        $this->email_recepient = null;
+        $this->resetForm();
+        $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
+            return DB::table('locations')->whereNull('deleted_at')->get(); //need to put whereNull('deleted_at') so that we only get the active records
+        });
     }
 
     public function render()
     {
-        $locations = LocationModel::where('name', 'like', '%'.$this->search.'%')
-            ->orWhere('address', 'like', '%'.$this->search.'%')
-            ->orWhere('lgt_tax_rate', 'like', '%'.$this->search.'%')
-            ->orWhere('email_recepient', 'like', '%'.$this->search.'%')
-            ->paginate(10); 
-
-        return view('livewire.maintenance.location', [
-            'locations' => $locations,
-        ]);
+        $locations = $this->searchLocations();
+        return view('livewire.maintenance.location', compact('locations'));
     }
 
-    public function create()
+    public function create(): void
     {
         $this->createLocation = true;
+        $this->resetForm();
     }
 
-    public function store()
+    public function store(): void
     {
         $this->validate();
-        
-        LocationModel::create([
-            'name' => $this->name,
-            'address' => $this->address,
-            'lgt_tax_rate' => $this->lgt_tax_rate,
-            'email_recepient' => $this->email_recepient,
-            'user_created' => Auth::id(),
-            'user_modified' => Auth::id(),
-        ]);
+        try {
+            LocationModel::create([
+                'name' => $this->name,
+                'address' => $this->address,
+                'lgt_tax_rate' => $this->lgt_tax_rate,
+                'agent_id' => $this->agent_id,
+                'email_recepient' => $this->email_recepient,
+                'user_created' => Auth::id(),
+                'user_modified' => Auth::id(),
+            ]);
 
-        session()->flash('success','Location Created Successfully!!');
-        return redirect()->route('maintenance.location');
+            session()->flash('success','Location Created Successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to create location!!');
+        }
+        $this->redirect('/maintenance/location');
     }
 
-    public function show($locationId)
+    public function show($locationId): void
     {
         $this->showLocation = true;
         $this->showLocationId = $locationId;
-        $this->location = LocationModel::find($locationId);
+        $this->location = $this->findLocation($this->showLocationId);
     }
 
-    public function edit($locationId)
+    public function edit($locationId): void
     {
         $this->editLocation = true;
         $this->editLocationId = $locationId;
-        $this->location = LocationModel::find($locationId);
+        $this->location = $this->findLocation($this->editLocationId);
         
-        $this->name = $this->location->name;
-        $this->address = $this->location->address;
-        $this->lgt_tax_rate = $this->location->lgt_tax_rate;
-        $this->email_recepient = $this->location->email_recepient;
+        $this->fill($this->location);
     }
 
-    public function update()
+    public function update(): void
     {
         $this->validate();
-
-        $location = LocationModel::find($this->editLocationId);
-        $location->name = $this->name;
-        $location->address = $this->address;
-        $location->lgt_tax_rate = $this->lgt_tax_rate;
-        $location->email_recepient = $this->email_recepient;
-        $location->user_modified = Auth::id();
-        
-        if($location->save())
+        try {
+            $location = $this->findLocation($this->editLocationId);
+            $location->update([
+                "name" => $this->name,
+                "address" => $this->address,
+                "lgt_tax_rate" => $this->lgt_tax_rate,
+                "agent_id" => $this->agent_id,
+                "email_recepient" => $this->email_recepient,
+                "user_modified" => Auth::id(),
+            ]);
+            
             session()->flash('success','Location Updated Successfully!!');
-        return redirect()->route('maintenance.location');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to update location!!');
+        }
+        $this->redirect('/maintenance/location');
     }
 
-    public function deleteLocation($locationId) 
+    public function deleteLocation($locationId): void
     {
-        LocationModel::find($locationId)->delete();
+        try {
+            $this->findLocation($locationId)->delete();
+            session()->flash('success','Location Deleted Successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to delete location!!');
+        }
+    }
+
+    private function searchLocations(): object
+    {
+        return LocationModel::search($this->search)->paginate(10);
+    }
+
+    private function resetForm(): void
+    {
+        $this->name = null;
+        $this->address = null;
+        $this->lgt_tax_rate = null;
+        $this->agent_id = null;
+        $this->email_recepient = null;
+    }
+
+    private function findLocation(int $userId): object
+    {
+        return LocationModel::findOrFail($userId);
     }
 }

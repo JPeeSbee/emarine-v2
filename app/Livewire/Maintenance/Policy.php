@@ -12,12 +12,13 @@ class Policy extends Component
 {
     use WithPagination;
     
-    public $policy_number, $agent_id, $policyId, $policy, $editPolicyId = null, $showPolicyId = null, $showPolicy = null, $editPolicy = null, $createPolicy = null,
-        $agents;
+    public $policy_number, $agents, $agent_id, $policy;
+    public bool $showPolicy, $editPolicy, $createPolicy;
+    public int $editPolicyId, $showPolicyId, $policyId;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
 
-    protected function rules() 
+    protected function rules(): array
     {
         return [
             'policy_number' => 'required|min:18',
@@ -25,7 +26,7 @@ class Policy extends Component
         ];
     }
  
-    protected function messages() 
+    protected function messages(): array
     {
         return [
             'required' => 'Please enter your :attribute.',
@@ -33,7 +34,7 @@ class Policy extends Component
         ];
     }
  
-    protected function validationAttributes() 
+    protected function validationAttributes(): array
     {
         return [
             'policy_number' => 'policy number',
@@ -41,82 +42,101 @@ class Policy extends Component
         ];
     }
 
-    public function mount()
+    public function mount(): void
     {
-        $this->policy_number = null;
-        $this->agent_id = null;
-        $this->agents = Cache::flexible('agents', [900, 1800], function () {
-            return DB::table('agents')->get();
+        $this->resetForm();
+        $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
+            return DB::table('agents')->whereNull('deleted_at')->get();
         });
     }
 
     public function render()
     {
-        $search = $this->search;
-        $policies = PolicyModel::with(['agent'])
-            ->orWhere('policy_number', 'like', '%'.$this->search.'%')
-            ->orWhereHas('agent', function($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%');
-            })->paginate(10); 
-
-        return view('livewire.maintenance.policy', [
-            'policies' => $policies,
-        ]);
+        $policies = $this->searchPolicy();
+        return view('livewire.maintenance.policy', compact('policies'));
     }
 
-    public function create()
+    public function create(): void
     {
         $this->createPolicy = true;
+        $this->resetForm();
     }
 
-    public function store()
+    public function store(): void
     {
         $this->validate();
-        
-        PolicyModel::create([
-            'policy_number' => $this->policy_number,
-            'agent_id' => $this->agent_id,
-            'user_created' => Auth::id(),
-            'user_modified' => Auth::id(),
-        ]);
+        try {
+            PolicyModel::create([
+                'policy_number' => $this->policy_number,
+                'agent_id' => $this->agent_id,
+                'user_created' => Auth::id(),
+                'user_modified' => Auth::id(),
+            ]);
 
-        session()->flash('success','Policy Created Successfully!!');
-        return redirect()->route('maintenance.policy');
+            session()->flash('success','Policy Created Successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to create policy!!');
+        }
+        $this->redirect('/maintenance/policy');
     }
 
-    public function show($policyId)
+    public function show($policyId): void
     {
         $this->showPolicy = true;
         $this->showPolicyId = $policyId;
-        $this->policy = PolicyModel::find($policyId);
+        $this->policy = $this->findPolicy($this->showPolicyId);
     }
 
-    public function edit($policyId)
+    public function edit($policyId): void
     {
         $this->editPolicy = true;
         $this->editPolicyId = $policyId;
-        $this->policy = PolicyModel::find($policyId);
+        $this->policy = $this->findPolicy($this->editPolicyId);
         
-        $this->policy_number = $this->policy->policy_number;
-        $this->agent_id = $this->policy->agent_id;
+        $this->fill($this->policy);
     }
 
-    public function update()
+    public function update(): void
     {
         $this->validate();
+        try {
+            $policy = $this->findPolicy($this->editPolicyId);
+            $policy->update([
+                'policy_number' => $this->policy_number,
+                'agent_id' => $this->agent_id,
+                'user_modified' => Auth::id(),
+            ]);
 
-        $policy = PolicyModel::find($this->editPolicyId);
-        $policy->policy_number = $this->policy_number;
-        $policy->agent_id = $this->agent_id;
-        $policy->user_modified = Auth::id();
-        
-        if($policy->save())
             session()->flash('success','Policy Updated Successfully!!');
-        return redirect()->route('maintenance.policy');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to update policy!!');
+        }
+        $this->redirect('/maintenance/policy');
     }
 
-    public function deletePolicy($policyId) 
+    public function deletePolicy($policyId): void
     {
-        PolicyModel::find($policyId)->delete();
+        try {
+            $this->findPolicy($policyId)->delete();
+            session()->flash('success','Policy deleted successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error','Failed to delete policy!!');
+        }
+    }
+
+    private function searchAgents(): object
+    {
+        return PolicyModel::search($this->search)->paginate(10);
+    }
+
+    private function resetForm(): void
+    {
+        $this->policy_number = null;
+        $this->agent_id = null;
+    }
+
+    private function findAgent($agentId): object
+    {
+        return PolicyModel::findOrFail($agentId);
     }
 }
