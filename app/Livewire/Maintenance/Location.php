@@ -5,7 +5,7 @@ namespace App\Livewire\Maintenance;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\Location as LocationModel;
 class Location extends Component
 {
     use WithPagination;
@@ -13,7 +13,6 @@ class Location extends Component
     public $address, $name, $email_recepient, $lgt_tax_rate, $locationId, $location, $editLocationId = null, $showLocationId = null, $showLocation = null, $editLocation = null, $createLocation = null;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
-    protected $model = "App\Models\Location";
 
     protected function rules() 
     {
@@ -53,7 +52,7 @@ class Location extends Component
 
     public function render()
     {
-        $locations = $this->model::where('name', 'like', '%'.$this->search.'%')
+        $locations = LocationModel::where('name', 'like', '%'.$this->search.'%')
             ->orWhere('address', 'like', '%'.$this->search.'%')
             ->orWhere('lgt_tax_rate', 'like', '%'.$this->search.'%')
             ->orWhere('email_recepient', 'like', '%'.$this->search.'%')
@@ -73,7 +72,7 @@ class Location extends Component
     {
         $this->validate();
         
-        $this->model::create([
+        LocationModel::create([
             'name' => $this->name,
             'address' => $this->address,
             'lgt_tax_rate' => $this->lgt_tax_rate,
@@ -90,14 +89,14 @@ class Location extends Component
     {
         $this->showLocation = true;
         $this->showLocationId = $locationId;
-        $this->location = $this->model::find($locationId);
+        $this->location = LocationModel::find($locationId);
     }
 
     public function edit($locationId)
     {
         $this->editLocation = true;
         $this->editLocationId = $locationId;
-        $this->location = $this->model::find($locationId);
+        $this->location = LocationModel::find($locationId);
         
         $this->name = $this->location->name;
         $this->address = $this->location->address;
@@ -109,7 +108,7 @@ class Location extends Component
     {
         $this->validate();
 
-        $location = $this->model::find($this->editLocationId);
+        $location = LocationModel::find($this->editLocationId);
         $location->name = $this->name;
         $location->address = $this->address;
         $location->lgt_tax_rate = $this->lgt_tax_rate;
@@ -123,6 +122,6 @@ class Location extends Component
 
     public function deleteLocation($locationId) 
     {
-        $this->model::find($locationId)->delete();
+        LocationModel::find($locationId)->delete();
     }
 }

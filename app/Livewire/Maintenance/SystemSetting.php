@@ -5,7 +5,7 @@ namespace App\Livewire\Maintenance;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\SystemSetting as SystemSettingModel;
 class SystemSetting extends Component
 {
     use WithPagination;
@@ -13,9 +13,8 @@ class SystemSetting extends Component
     public $name, $value, $settingId, $setting, $editSettingId = null, $showSettingId = null, $showSetting = null, $editSetting = null, $createSetting = null;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
-    protected $model = "App\Models\SystemSetting";
 
-    protected function rules() 
+    protected function rules(): array
     {
         return [
             'name' => 'required',
@@ -23,7 +22,7 @@ class SystemSetting extends Component
         ];
     }
  
-    protected function messages() 
+    protected function messages(): array
     {
         return [
             'required' => 'Please enter a :attribute.',
@@ -31,7 +30,7 @@ class SystemSetting extends Component
         ];
     }
  
-    protected function validationAttributes() 
+    protected function validationAttributes(): array
     {
         return [
             'name' => 'name',
@@ -39,34 +38,28 @@ class SystemSetting extends Component
         ];
     }
 
-    public function mount()
+    public function mount(): void
     {
-        $this->name = null;
-        $this->value = null;
+        $this->resetForm();
     }
 
     public function render()
     {
-        $search = $this->search;
-        $settings = $this->model::where('name', 'like', '%'.$this->search.'%')
-            ->orWhere('value', 'like', '%'.$this->search.'%')
-            ->paginate(10); 
+        $settings = $this->searchSettings();
 
-        return view('livewire.maintenance.system-setting', [
-            'settings' => $settings,
-        ]);
+        return view('livewire.maintenance.system-setting', compact('settings'));
     }
 
-    public function create()
+    public function create(): void
     {
         $this->createSetting = true;
     }
 
-    public function store()
+    public function store(): void
     {
         $this->validate();
         
-        $this->model::create([
+        SystemSettingModel::create([
             'name' => $this->name,
             'value' => $this->value,
             'user_created' => Auth::id(),
@@ -74,42 +67,53 @@ class SystemSetting extends Component
         ]);
 
         session()->flash('success','Setting Created Successfully!!');
-        return redirect()->route('maintenance.system-setting');
+        $this->redirect('/maintenance/system-setting');
     }
 
-    public function show($settingId)
+    public function show($settingId): void
     {
         $this->showSetting = true;
         $this->showSettingId = $settingId;
-        $this->setting = $this->model::find($settingId);
+        $this->setting = SystemSettingModel::findOrFail($settingId);
     }
 
-    public function edit($settingId)
+    public function edit($settingId): void
     {
         $this->editSetting = true;
         $this->editSettingId = $settingId;
-        $this->setting = $this->model::find($settingId); 
+        $this->setting = SystemSettingModel::findOrFail($settingId); 
         
         $this->name = $this->setting->name;
         $this->value = $this->setting->value;
     }
 
-    public function update()
+    public function update(): void
     {
         $this->validate();
 
-        $setting = $this->model::find($this->editSettingId);
+        $setting = SystemSettingModel::findOrFail($this->editSettingId);
         $setting->name = $this->name;
         $setting->value = $this->value;
         $setting->user_modified = Auth::id();
         
         if($setting->save())
             session()->flash('success','Setting Updated Successfully!!');
-        return redirect()->route('maintenance.system-setting');
+        $this->redirect('/maintenance/system-setting');
     }
 
-    public function deleteSetting($settingId) 
+    public function deleteSetting($settingId): void
     {
-        $this->model::find($settingId)->delete();
+        SystemSettingModel::findOrFail($settingId)->delete();
+    }
+    
+    private function searchSettings()
+    {
+        return SystemSettingModel::search($this->search)->paginate(10);
+    }
+
+    private function resetForm(): void
+    {
+        $this->name = null;
+        $this->value = null;
     }
 }

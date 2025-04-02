@@ -4,9 +4,9 @@ namespace App\Livewire\Maintenance;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User as UserModel;
 
 class User extends Component
 {
@@ -15,7 +15,7 @@ class User extends Component
     public $name, $email, $userId, $user, $editUserId = null, $showUserId = null, $showUser = null, $editUser = null, $createUser = null;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
-    protected $model = "App\Models\User", $password = 'maagap@2025';
+    protected $password = 'maagap@2025';
 
     protected function rules(): array
     {
@@ -63,7 +63,7 @@ class User extends Component
     {
         $this->validate();
         try {
-            $this->model::create([
+            UserModel::create([
                 'name' => $this->name,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
@@ -82,14 +82,14 @@ class User extends Component
     {
         $this->showUser = true;
         $this->showUserId = $userId;
-        $this->user = $this->model::findOrFail($userId);
+        $this->user = $this->findUser($userId);
     }
 
     public function edit($userId): void
     {
         $this->editUser = true;
         $this->editUserId = $userId;
-        $this->user = $this->model::findOrFail($userId);
+        $this->user = $this->findUser($userId);
         
         $this->fill($this->user->toArray());
     }
@@ -98,7 +98,7 @@ class User extends Component
     {
         $this->validate();
         try {
-            $user = $this->model::findOrFail($this->editUserId);
+            $user = $this->findUser($this->editUserId);
             $user->update([
                 'name' => $this->name,
                 'email' => $this->email,
@@ -114,7 +114,7 @@ class User extends Component
     public function deleteUser($userId): void
     {
         try {
-            $this->model::findOrFail($userId)->delete();
+            $this->findUser($userId)->delete();
             session()->flash('success', 'User Deleted Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error', 'Failed to delete user.');
@@ -123,7 +123,7 @@ class User extends Component
     
     public function resetUserPassword($userId): void
     {
-        $user = $this->model::findOrFail($userId);
+        $user = $this->findUser($userId);
         $user->password = Hash::make($this->password);
         $user->save();
 
@@ -132,12 +132,17 @@ class User extends Component
 
     private function searchUsers()
     {
-        return $this->model::search($this->search)->paginate(10);
+        return UserModel::search($this->search)->paginate(10);
     }
 
     private function resetForm(): void
     {
         $this->name = null;
         $this->email = null;
+    }
+
+    private function findUser(int $userId): object
+    {
+        return UserModel::findOrFail($userId);
     }
 }

@@ -7,18 +7,17 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Agent as AgentModel;
 
 class Agent extends Component
 {
     use WithPagination;
     
-    public $code, $name, $email, $location_id, $agentId, $agent, $editAgentId = null, $showAgentId = null, $showAgent = null, $editAgent = null, $createAgent = null,
-        $locations;
+    public $code, $name, $email, $locations, $location_id, $agentId, $agent, $editAgentId = null, $showAgentId = null, $showAgent = null, $editAgent = null, $createAgent = null;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
-    protected $model = "App\Models\Agent";
 
-    protected function rules() 
+    protected function rules(): array 
     {
         return [
             'code' => 'required|min:9',
@@ -28,7 +27,7 @@ class Agent extends Component
         ];
     }
  
-    protected function messages() 
+    protected function messages(): array 
     {
         return [
             'required' => 'Please enter your :attribute.',
@@ -37,7 +36,7 @@ class Agent extends Component
         ];
     }
  
-    protected function validationAttributes() 
+    protected function validationAttributes(): array 
     {
         return [
             'code' => 'agent code',
@@ -47,12 +46,9 @@ class Agent extends Component
         ];
     }
 
-    public function mount()
+    public function mount(): void
     {
-        $this->code = null;
-        $this->name = null;
-        $this->email = null;
-        $this->location_id = null;
+        $this->resetForm();
         $this->locations = Cache::remember('locations', now()->addMinutes(30), function () {
             return DB::table('locations')->get();
         });
@@ -60,83 +56,83 @@ class Agent extends Component
 
     public function render()
     {
-        $search = $this->search;
-        $agents = $this->model::with(['location'])->where('name', 'like', '%'.$this->search.'%')
-            ->orWhere('code', 'like', '%'.$this->search.'%')
-            ->orWhere('email', 'like', '%'.$this->search.'%')
-            ->orWhereHas('location', function($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%');
-            })->paginate(10); 
-
-        return view('livewire.maintenance.agent', [
-            'agents' => $agents,
-        ]);
+        $agents = $this->searchAgents();
+        return view('livewire.maintenance.agent', compact('agents'));
     }
 
-    public function create()
+    public function create(): void
     {
+        $this->resetForm();
         $this->createAgent = true;
     }
 
-    public function store()
+    public function store(): void
     {
         $this->validate();
-        
-        $this->model::create([
-            'code' => $this->code,
-            'name' => $this->name,
-            'email' => $this->email,
-            'location_id' => $this->location,
-            'user_created' => Auth::id(),
-            'user_modified' => Auth::id(),
-        ]);
-
-        session()->flash('success','Agent Created Successfully!!');
-        return redirect()->route('maintenance.agent');
+        try {
+            AgentModel::create([
+                'code' => $this->code,
+                'name' => $this->name,
+                'email' => $this->email,
+                'location_id' => $this->location_id,
+                'user_created' => Auth::id(),
+                'user_modified' => Auth::id(),
+            ]);
+            session()->flash('success', 'Agent Created Successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error', 'Failed to create agent.');
+        }
+        $this->redirect('/maintenance/agent');
     }
 
-    public function show($agentId)
+    public function show($agentId): void
     {
         $this->showAgent = true;
         $this->showAgentId = $agentId;
-        $this->agent = $this->model::findOrFail($agentId);
+        $this->agent = AgentModel::findOrFail($this->showAgentId);
     }
 
-    public function edit($agentId)
+    public function edit($agentId): void
     {
         $this->editAgent = true;
         $this->editAgentId = $agentId;
-        $this->agent = $this->model::findOrFail($agentId);
+        $this->agent = AgentModel::findOrFail($this->editAgentId);
         
-        $this->code = $this->agent->code;
-        $this->name = $this->agent->name;
-        $this->email = $this->agent->email;
-        $this->location_id = $this->agent->location_id;
+        $this->fill($this->agent->toArray());
     }
 
-    public function update()
+    public function update(): void
     {
         $this->validate();
-
-        $agent = $this->model::findOrFail($this->editAgentId);
-        $agent->code = $this->code;
-        $agent->name = $this->name;
-        $agent->email = $this->email;
-        $agent->location_id = $this->location_id;
-        
-        if($agent->save())
-            session()->flash('success','Agent Updated Successfully!!');
-        return redirect()->route('maintenance.agent');
+        try {
+            $agent = AgentModel::findOrFail($this->editAgentId);
+            $agent->update([
+                'code' => $this->code,
+                'name' => $this->name,
+                'email' => $this->email,
+                'location_id' => $this->location_id,
+                'user_modified' => Auth::id(),
+            ]);
+            session()->flash('success', 'Agent Updated Successfully!!');
+        } catch (\Throwable $th) {
+            session()->flash('error', 'Failed to update agent.');
+        }
+        $this->redirect('/maintenance/agent');
     }
 
-    public function deleteAgent($agentId) 
+    public function deleteAgent($agentId): void 
     {
-        $this->model::findOrFail($agentId)->delete();
+        try {
+            AgentModel::findOrFail($agentId)->delete();
+            session()->flash('success', 'Agent Deleted Successfully!!');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to delete agent.');
+        }
     }
 
     private function searchAgents()
     {
-        return $this->model::with('location')
+        return AgentModel::with('location')
             ->where('name', 'like', '%'.$this->search.'%')
             ->orWhere('code', 'like', '%'.$this->search.'%')
             ->orWhere('email', 'like', '%'.$this->search.'%')

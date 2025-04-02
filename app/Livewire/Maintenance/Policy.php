@@ -7,7 +7,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-
+use App\Models\Policy as PolicyModel;
 class Policy extends Component
 {
     use WithPagination;
@@ -16,7 +16,6 @@ class Policy extends Component
         $agents;
     public string $search = '';
     protected $queryString = ['search' => ['except' => '']];
-    protected $model = "App\Models\Policy";
 
     protected function rules() 
     {
@@ -54,7 +53,7 @@ class Policy extends Component
     public function render()
     {
         $search = $this->search;
-        $policies = $this->model::with(['agent'])
+        $policies = PolicyModel::with(['agent'])
             ->orWhere('policy_number', 'like', '%'.$this->search.'%')
             ->orWhereHas('agent', function($query) use ($search) {
                 $query->where('name', 'like', '%'.$search.'%');
@@ -74,7 +73,7 @@ class Policy extends Component
     {
         $this->validate();
         
-        $this->model::create([
+        PolicyModel::create([
             'policy_number' => $this->policy_number,
             'agent_id' => $this->agent_id,
             'user_created' => Auth::id(),
@@ -89,14 +88,14 @@ class Policy extends Component
     {
         $this->showPolicy = true;
         $this->showPolicyId = $policyId;
-        $this->policy = $this->model::find($policyId);
+        $this->policy = PolicyModel::find($policyId);
     }
 
     public function edit($policyId)
     {
         $this->editPolicy = true;
         $this->editPolicyId = $policyId;
-        $this->policy = $this->model::find($policyId);
+        $this->policy = PolicyModel::find($policyId);
         
         $this->policy_number = $this->policy->policy_number;
         $this->agent_id = $this->policy->agent_id;
@@ -106,7 +105,7 @@ class Policy extends Component
     {
         $this->validate();
 
-        $policy = $this->model::find($this->editPolicyId);
+        $policy = PolicyModel::find($this->editPolicyId);
         $policy->policy_number = $this->policy_number;
         $policy->agent_id = $this->agent_id;
         $policy->user_modified = Auth::id();
@@ -118,6 +117,6 @@ class Policy extends Component
 
     public function deletePolicy($policyId) 
     {
-        $this->model::find($policyId)->delete();
+        PolicyModel::find($policyId)->delete();
     }
 }

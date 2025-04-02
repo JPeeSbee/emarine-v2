@@ -15,4 +15,10 @@ class SystemSetting extends Model
         'user_created',
         'user_modified',
     ];
+
+    public function scopeSearch($query, $search)
+    {
+        return $query->where('name', 'like', '%'.$search.'%')
+            ->orWhere('value', 'like', '%'.$search.'%'); 
+    }
 }
