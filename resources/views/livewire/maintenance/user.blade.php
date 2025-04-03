@@ -2,7 +2,7 @@
     <x-includes.header :header="'Users'"/>
     <x-includes.message />
     <div class="grid auto-rows-min gap-4 ">
-        <div class="relative aspect-video overflow-x-auto lg:overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+        <div class="relative rounded-xl border border-neutral-200 dark:border-neutral-700">
             @if($createUser)
                 @include('livewire.maintenance.user.create')
             @elseif($showUser)
@@ -11,8 +11,8 @@
                 @include('livewire.maintenance.user.edit')
             @else
                 <div class="relative grid grid-cols-4 m-2">
-                    {{-- <form class="block" > --}}
-                        <input type="text" id="search" wire:model.live='search' class="block rounded-t-lg px-2 py-2 w-full text-sm text-gray-900 bg-gray-50 dark:bg-gray-700 border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="Search Here.. " />
+                    {{-- <form class="block" wire:submit='searchTerm'> --}}
+                        <input type="text" id="search" wire:model.live.debounce.150ms='search' class="block rounded-t-lg px-2 py-2 w-full text-sm text-gray-900 bg-gray-50 dark:bg-gray-700 border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="Search Here.. " />
                     {{-- </form> --}}
                     <div class="col-span-2 col-start-3 flex justify-end space-x-2">
                         <button type="button" class="focus:outline-none text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm dark:focus:ring-green-900" title="Create User">

@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('address');
             $table->decimal('lgt_tax_rate', 2, 2);
-            $table->foreignId('agent_id')->index();
             $table->string('email_recepient');
             $table->softDeletes('deleted_at');
             $table->smallInteger('user_created');

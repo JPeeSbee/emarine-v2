@@ -4,10 +4,11 @@ namespace App\Livewire\Maintenance;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Lazy;
+use App\Models\User as UserModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User as UserModel;
-
+#[Lazy]
 class User extends Component
 {
     use WithPagination;
@@ -43,15 +44,28 @@ class User extends Component
         ];
     }
 
-    public function mount(): void
-    {
-        $this->resetForm();
-    }
-
     public function render()
     {
         $users = $this->searchUsers();
         return view('livewire.maintenance.user', compact('users'));
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    private function searchUsers(): object
+    {
+        return UserModel::when($this->search, function ($query) { 
+            $query->search($this->search); 
+        })
+        ->paginate(10);
+    }
+
+    public function mount(): void
+    {
+        $this->resetForm();
     }
 
     public function create(): void
@@ -76,7 +90,8 @@ class User extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create User!!');
         }
-        $this->redirect('/maintenance/user');
+        $this->createUser = false;
+        // $this->redirect('/maintenance/user');
     }
 
     public function show($userId): void
@@ -109,7 +124,8 @@ class User extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update user!!');
         }
-        $this->redirect('/maintenance/user');
+        $this->editUser = false;
+        // $this->redirect('/maintenance/user');
     }
 
     public function deleteUser($userId): void
@@ -134,11 +150,6 @@ class User extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to reset password!!');
         }
-    }
-
-    private function searchUsers(): object
-    {
-        return UserModel::search($this->search)->paginate(10);
     }
 
     private function resetForm(): void

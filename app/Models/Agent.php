@@ -25,8 +25,7 @@ class Agent extends Model
 
     public function scopeSearch($query, $search)
     {
-        return $query->relationship()
-            ->where('name', 'like', '%'.$search.'%')
+        return $query->where('name', 'like', '%'.$search.'%')
             ->orWhere('code', 'like', '%'.$search.'%')
             ->orWhere('email', 'like', '%'.$search.'%')
             ->orWhereHas('location', function($q) use ($search){

@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SystemSetting as SystemSettingModel;
+use Livewire\Attributes\Lazy;
+#[Lazy]
 class SystemSetting extends Component
 {
     use WithPagination;
@@ -40,16 +42,29 @@ class SystemSetting extends Component
         ];
     }
 
-    public function mount(): void
-    {
-        $this->resetForm();
-    }
-
     public function render()
     {
         $settings = $this->searchSettings();
 
         return view('livewire.maintenance.system-setting', compact('settings'));
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+    
+    private function searchSettings()
+    {
+        return SystemSettingModel::when($this->search, function ($query) { 
+            $query->search($this->search); 
+        })
+        ->paginate(10);
+    }
+
+    public function mount(): void
+    {
+        $this->resetForm();
     }
 
     public function create(): void
@@ -73,7 +88,8 @@ class SystemSetting extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create setting!!');
         }
-        $this->redirect('/maintenance/system-setting');
+        $this->createSetting = false;
+        // $this->redirect('/maintenance/system-setting');
     }
 
     public function show($settingId): void
@@ -107,7 +123,8 @@ class SystemSetting extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update setting!!');
         }
-        $this->redirect('/maintenance/system-setting');
+        $this->editSetting = false;
+        // $this->redirect('/maintenance/system-setting');
     }
 
     public function deleteSetting($settingId): void
@@ -118,11 +135,6 @@ class SystemSetting extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to delete setting!!');
         }
-    }
-    
-    private function searchSettings()
-    {
-        return SystemSettingModel::search($this->search)->paginate(10);
     }
 
     private function resetForm(): void

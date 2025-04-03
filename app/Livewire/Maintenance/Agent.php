@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Agent as AgentModel;
-
+use Livewire\Attributes\Lazy;
+#[Lazy]
 class Agent extends Component
 {
     use WithPagination;
@@ -48,6 +49,25 @@ class Agent extends Component
         ];
     }
 
+    public function render()
+    {
+        $agents = $this->searchAgents();
+        return view('livewire.maintenance.agent', compact('agents'));
+    }
+    
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    private function searchAgents()
+    {
+        return AgentModel::relationship()->when($this->search, function ($query) { 
+            $query->search($this->search); 
+        })
+        ->paginate(10);
+    }
+
     public function mount(): void
     {
         $this->resetForm();
@@ -56,10 +76,12 @@ class Agent extends Component
         });
     }
 
-    public function render()
+    private function resetForm(): void
     {
-        $agents = $this->searchAgents();
-        return view('livewire.maintenance.agent', compact('agents'));
+        $this->code = null;
+        $this->name = null;
+        $this->email = null;
+        $this->location_id = null;
     }
 
     public function create(): void
@@ -84,7 +106,7 @@ class Agent extends Component
         } catch (\Throwable $th) {
             session()->flash('error', 'Failed to create agent.');
         }
-        $this->redirect('/maintenance/agent');
+        $this->createAgent = false;
     }
 
     public function show($agentId): void
@@ -119,10 +141,10 @@ class Agent extends Component
         } catch (\Throwable $th) {
             session()->flash('error', 'Failed to update agent.');
         }
-        $this->redirect('/maintenance/agent');
+        $this->editAgent = false;
     }
 
-    public function deleteAgent($agentId): void 
+    public function deleteAgent($agentId): void
     {
         try {
             $this->findAgent($agentId)->delete();
@@ -130,19 +152,6 @@ class Agent extends Component
         } catch (\Throwable $th) {
             session()->flash('error', 'Failed to delete agent.');
         }
-    }
-
-    private function searchAgents()
-    {
-        return AgentModel::search($this->search)->paginate(10);
-    }
-
-    private function resetForm(): void
-    {
-        $this->code = null;
-        $this->name = null;
-        $this->email = null;
-        $this->location_id = null;
     }
 
     private function findAgent($agentId)
