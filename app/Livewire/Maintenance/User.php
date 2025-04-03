@@ -44,10 +44,23 @@ class User extends Component
         ];
     }
 
+    public function placeholder() {
+        return '
+            <div class="flex items-center justify-center w-full h-full">
+                <!-- Loading spinner... -->
+                <svg width="250px" height="250px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
+                        <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
+                    </circle>
+                </svg>
+            </div>
+        ';
+    }
+
     public function render()
     {
         $users = $this->searchUsers();
-        return view('livewire.maintenance.user', compact('users'));
+        return view('livewire.maintenance.user.user-list', compact('users'));
     }
 
     public function updatedSearch()
@@ -98,14 +111,14 @@ class User extends Component
     {
         $this->showUser = true;
         $this->showUserId = $userId;
-        $this->user = $this->findUser($userId);
+        $this->user = $this->findUser($this->showUserId);
     }
 
     public function edit($userId): void
     {
         $this->editUser = true;
         $this->editUserId = $userId;
-        $this->user = $this->findUser($userId);
+        $this->user = $this->findUser($this->editUserId);
         
         $this->fill($this->user->toArray());
     }
@@ -134,7 +147,7 @@ class User extends Component
             $this->findUser($userId)->delete();
             session()->flash('success', 'User Deleted Successfully!!');
         } catch (\Throwable $th) {
-            session()->flash('error', 'Failed to delete user.');
+            session()->flash('error', 'Failed to delete user!!');
         }
     }
     
@@ -158,7 +171,7 @@ class User extends Component
         $this->email = null;
     }
 
-    private function findUser(int $userId): object
+    private function findUser($userId): object
     {
         return UserModel::findOrFail($userId);
     }
