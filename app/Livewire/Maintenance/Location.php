@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Location as LocationModel;
+use Livewire\Attributes\Lazy;
+#[Lazy]
 class Location extends Component
 {
     use WithPagination;
@@ -47,18 +49,31 @@ class Location extends Component
         ];
     }
 
-    public function mount(): void
-    {
-        $this->resetForm();
-        $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
-            return DB::table('locations')->whereNull('deleted_at')->get(); //need to put whereNull('deleted_at') so that we only get the active records
-        });
-    }
-
     public function render()
     {
         $locations = $this->searchLocations();
         return view('livewire.maintenance.location', compact('locations'));
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    private function searchLocations(): object
+    {
+        return LocationModel::when($this->search, function ($query) { 
+            $query->search($this->search); 
+        })
+        ->paginate(10);
+    }
+
+    public function mount(): void
+    {
+        $this->resetForm();
+        // $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
+        //     return DB::table('agents')->whereNull('deleted_at')->get(); //need to put whereNull('deleted_at') so that we only get the active records
+        // });
     }
 
     public function create(): void
@@ -80,12 +95,13 @@ class Location extends Component
                 'user_created' => Auth::id(),
                 'user_modified' => Auth::id(),
             ]);
-
+            Cache::forget('locations');
             session()->flash('success','Location Created Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create location!!');
         }
-        $this->redirect('/maintenance/location');
+        $this->createLocation = false;
+        // $this->redirect('/maintenance/location');
     }
 
     public function show($locationId): void
@@ -117,12 +133,13 @@ class Location extends Component
                 "email_recepient" => $this->email_recepient,
                 "user_modified" => Auth::id(),
             ]);
-            
+            Cache::forget('locations');
             session()->flash('success','Location Updated Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update location!!');
         }
-        $this->redirect('/maintenance/location');
+        $this->editLocation = false;
+        // $this->redirect('/maintenance/location');
     }
 
     public function deleteLocation($locationId): void
@@ -133,11 +150,6 @@ class Location extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to delete location!!');
         }
-    }
-
-    private function searchLocations(): object
-    {
-        return LocationModel::search($this->search)->paginate(10);
     }
 
     private function resetForm(): void

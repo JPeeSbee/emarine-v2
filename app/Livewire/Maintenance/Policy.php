@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Policy as PolicyModel;
+use Livewire\Attributes\Lazy;
+#[Lazy]
 class Policy extends Component
 {
     use WithPagination;
@@ -42,18 +44,31 @@ class Policy extends Component
         ];
     }
 
+    public function render()
+    {
+        $policies = $this->searchPolicy();
+        return view('livewire.maintenance.policy', compact('policies'));
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    private function searchPolicy(): object
+    {
+        return PolicyModel::when($this->search, function ($query) { 
+            $query->search($this->search); 
+        })
+        ->paginate(10);
+    }
+
     public function mount(): void
     {
         $this->resetForm();
         $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
             return DB::table('agents')->whereNull('deleted_at')->get();
         });
-    }
-
-    public function render()
-    {
-        $policies = $this->searchPolicy();
-        return view('livewire.maintenance.policy', compact('policies'));
     }
 
     public function create(): void
@@ -77,7 +92,8 @@ class Policy extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create policy!!');
         }
-        $this->redirect('/maintenance/policy');
+        $this->createPolicy = false;
+        // $this->redirect('/maintenance/policy');
     }
 
     public function show($policyId): void
@@ -111,7 +127,8 @@ class Policy extends Component
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update policy!!');
         }
-        $this->redirect('/maintenance/policy');
+        $this->editPolicy = false;
+        // $this->redirect('/maintenance/policy');
     }
 
     public function deletePolicy($policyId): void
@@ -124,19 +141,14 @@ class Policy extends Component
         }
     }
 
-    private function searchAgents(): object
-    {
-        return PolicyModel::search($this->search)->paginate(10);
-    }
-
     private function resetForm(): void
     {
         $this->policy_number = null;
         $this->agent_id = null;
     }
 
-    private function findAgent($agentId): object
+    private function findPolicy($policyId): object
     {
-        return PolicyModel::findOrFail($agentId);
+        return PolicyModel::findOrFail($policyId);
     }
 }
