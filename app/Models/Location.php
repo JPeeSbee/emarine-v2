@@ -31,9 +31,4 @@ class Location extends Model
             ->orWhere('lgt_tax_rate', 'like', '%'.$search.'%')
             ->orWhere('email_recepient', 'like', '%'.$search.'%');
     }
-
-    public function scopeRelationship($query)
-    {
-        return $query->with(['agent']);
-    }
 }

@@ -4,16 +4,15 @@ namespace App\Livewire\Maintenance;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Lazy;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role as RoleModel;
-
+#[Lazy]
 class Role extends Component
 {
     use WithPagination;
-    
-    public $name, $selectedPermissions = [], $role, $roles, $role_access;
+
+    public $name, $selectedPermissions = [], $role, $role_access;
     public bool $showRole, $editRole, $createRole;
     public int $editRoleId, $showRoleId, $roleId;
     public string $search = '';
@@ -26,15 +25,15 @@ class Role extends Component
             'selectedPermissions' => 'required|array',
         ];
     }
- 
+
     protected function messages(): array
     {
         return [
             'required' => 'Please enter role :attribute.',
         ];
     }
- 
-    protected function validationAttributes() 
+
+    protected function validationAttributes()
     {
         return [
             'name' => 'role name',
@@ -46,7 +45,7 @@ class Role extends Component
         return '
             <div class="flex items-center justify-center w-full h-full">
                 <!-- Loading spinner... -->
-                <svg width="250px" height="250px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <svg width="100px" height="100px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
                         <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
                     </circle>
@@ -57,21 +56,13 @@ class Role extends Component
 
     public function render()
     {
-        $roles = $this->searchRoles();
+        $roles = RoleModel::paginate(10);
         return view('livewire.maintenance.role.role-list', compact('roles'));
     }
 
     public function updatedSearch()
     {
         $this->resetPage();
-    }
-
-    private function searchRoles(): object
-    {
-        return RoleModel::when($this->search, function ($query) { 
-            $query->search($this->search); 
-        })
-        ->paginate(10);
     }
 
     public function mount(): void
@@ -88,14 +79,14 @@ class Role extends Component
 
     public function store(): void
     {
-        dd($this->validate());
+        $this->validate();
         try {
             $role = RoleModel::create([
                 'name' => $this->name,
             ]);
-            
+
             $role->syncPermissions($this->selectedPermissions);
-            
+
             session()->flash('success','Role Created Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create Role!!');
@@ -116,8 +107,9 @@ class Role extends Component
         $this->editRole = true;
         $this->editRoleId = $roleId;
         $this->role = $this->findRole($this->editRoleId);
-        
-        $this->fill($this->role->toArray());
+
+        $this->name = $this->role->name;
+        $this->selectedPermissions = $this->role->permissions->pluck('name')->toArray();
     }
 
     public function update(): void
@@ -127,9 +119,9 @@ class Role extends Component
             $role = $this->findRole($this->editRoleId);
             $role->update([
                 'name' => $this->name,
-                'permissions' => $this->permissions,
-                'user_modified' => Auth::id(),
             ]);
+            
+            $role->syncPermissions($this->selectedPermissions);
             session()->flash('success','Role Updated Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update role!!');
@@ -151,7 +143,7 @@ class Role extends Component
     private function resetForm(): void
     {
         $this->name = null;
-        $this->selectedPermissions = null;
+        $this->selectedPermissions = [];
     }
 
     private function findRole($roleId): object

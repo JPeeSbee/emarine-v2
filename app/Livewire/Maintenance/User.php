@@ -6,14 +6,16 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Lazy;
 use App\Models\User as UserModel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role as RoleModel;
 #[Lazy]
 class User extends Component
 {
     use WithPagination;
     
-    public $name, $email, $user;
+    public $name, $email, $user, $role, $roles, $locations, $location_id;
     public bool $showUser, $editUser, $createUser;
     public int $editUserId, $showUserId, $userId;
     public string $search = '';
@@ -25,6 +27,8 @@ class User extends Component
         return [
             'name' => 'required',
             'email' => 'required|email',
+            'role' => 'required',
+            'location_id' => 'required',
         ];
     }
  
@@ -41,6 +45,8 @@ class User extends Component
         return [
             'name' => 'full name',
             'email' => 'email address',
+            'role' => 'role',
+            'location_id' => 'location',
         ];
     }
 
@@ -48,7 +54,7 @@ class User extends Component
         return '
             <div class="flex items-center justify-center w-full h-full">
                 <!-- Loading spinner... -->
-                <svg width="250px" height="250px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <svg width="100px" height="100px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
                         <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
                     </circle>
@@ -70,15 +76,18 @@ class User extends Component
 
     private function searchUsers(): object
     {
-        return UserModel::when($this->search, function ($query) { 
+        return UserModel::relationship()->when($this->search, function ($query) { 
             $query->search($this->search); 
         })
+        ->latest()
         ->paginate(10);
     }
 
     public function mount(): void
     {
         $this->resetForm();
+        $this->roles = RoleModel::all()->pluck('name');
+        $this->locations = DB::table('locations')->whereNull('deleted_at')->orderBy('name', 'asc')->get(); //need to put whereNull('deleted_at') so that we only get the active records
     }
 
     public function create(): void
@@ -88,17 +97,21 @@ class User extends Component
     }
 
     public function store(): void
-    {
+    {   
         $this->validate();
         try {
-            UserModel::create([
+            $user = UserModel::create([
                 'name' => $this->name,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
+                'location_id' => $this->location_id,
                 'user_created' => Auth::id(),
                 'user_modified' => Auth::id(),
             ]);
 
+            $user->assignRole($this->role);
+        //     $role = RoleModel::where('name', $this->role)->first();
+        // dd($role->permission);
             session()->flash('success','User Created Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create User!!');
@@ -131,8 +144,11 @@ class User extends Component
             $user->update([
                 'name' => $this->name,
                 'email' => $this->email,
+                'location_id' => $this->location_id,
                 'user_modified' => Auth::id(),
             ]);
+
+            $user->syncRoles($this->role);
             session()->flash('success','User Updated Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update user!!');
@@ -169,6 +185,8 @@ class User extends Component
     {
         $this->name = null;
         $this->email = null;
+        $this->location_id = null;
+        $this->role = null;
     }
 
     private function findUser($userId): object

@@ -29,6 +29,9 @@
                             <th scope="col" class="px-6 py-3">
                                 Email
                             </th>
+                            <th scope="col" class="px-6 py-3">
+                                Role
+                            </th>
                             <th scope="col" class="w-1/18">
                                 View
                             </th>
@@ -51,6 +54,9 @@
                                 </th>
                                 <td class="p-4">
                                     {{$user->email}}
+                                </td>
+                                <td class="p-4">
+                                    {{$user->getRoleNames()->first()}}
                                 </td>
                                 <td>
                                     <button type="button" class="focus:outline-none text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm dark:focus:ring-blue-900" title="View Details">

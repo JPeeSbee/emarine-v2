@@ -23,6 +23,7 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    // Settings routes accessible to all authenticated users
     Route::redirect('settings', 'settings/profile');
     Route::prefix('settings')->group(function() {
         Route::get('profile', Profile::class)->name('settings.profile');
@@ -30,23 +31,44 @@ Route::middleware(['auth'])->group(function () {
         Route::get('appearance', Appearance::class)->name('settings.appearance');
     });
 
+    // Report routes - require both Encoder role AND specific permissions
     Route::prefix('report')->group(function() {
         Route::redirect('report', 'report/posted');
-        Route::get('posted', Posted::class)->name('report.posted');
-        Route::get('summary', Summary::class)->name('report.summary');
-    });
-
-    Route::get('/marine-issuance', MarineIssuance::class)->name('marine-issuance');
-    Route::prefix('maintenance')->group(function() {
-        Route::redirect('maintenance', 'maintenance/system-setting');
-        Route::get('agent', Agent::class)->name('maintenance.agent');
-        Route::get('location', Location::class)->name('maintenance.location');
-        Route::get('policy', Policy::class)->name('maintenance.policy');
-        Route::get('role', Role::class)->name('maintenance.role');
-        Route::get('system-setting', SystemSetting::class)->name('maintenance.system-setting');
-        Route::get('user', User::class)->name('maintenance.user');
+        Route::get('posted', Posted::class)
+            ->middleware(['permission:Posted Certificate'])
+            ->name('report.posted');
+        Route::get('summary', Summary::class)
+            ->middleware(['permission:Certificate Summary'])
+            ->name('report.summary');
     });
     
+    // Marine Issuance - requires both Encoder role AND Certificate Issuance permission
+    Route::get('/marine-issuance', MarineIssuance::class)
+        ->middleware(['permission:Certificate Issuance'])
+        ->name('marine-issuance');
+
+    // Maintenance routes - require both Admin role AND specific permissions
+    Route::prefix('maintenance')->group(function() {
+        Route::redirect('maintenance', 'maintenance/system-setting');
+        Route::get('agent', Agent::class)
+            ->middleware(['permission:Agent'])
+            ->name('maintenance.agent');
+        Route::get('location', Location::class)
+            ->middleware(['permission:Location'])
+            ->name('maintenance.location');
+        Route::get('policy', Policy::class)
+            ->middleware(['permission:Policy'])
+            ->name('maintenance.policy');
+        Route::get('role', Role::class)
+            ->middleware(['permission:Role'])
+            ->name('maintenance.role');
+        Route::get('system-setting', SystemSetting::class)
+            ->middleware(['permission:System Settings'])
+            ->name('maintenance.system-setting');
+        Route::get('user', User::class)
+            ->middleware(['permission:User'])
+            ->name('maintenance.user');
+    });
 });
 
 require __DIR__.'/auth.php';

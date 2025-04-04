@@ -13,7 +13,7 @@
         <!-- Modal body -->
         <form class="max-w-sm md:max-w-lg mx-auto my-12" wire:submit='store'>
             <div class="grid md:grid-cols-2 md:gap-6">
-                <div class="relative z-0 w-full mb-5 p-2 group"> 
+                <div class="relative z-0 w-full mb-5 p-2 group">
                     <input wire:model='name' type="text" name="name" id="name" value="{{old('name')}}" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                     <label for="name" class="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4">
                         Role Name
@@ -28,7 +28,7 @@
                         @foreach ($role_access as $permission)
                             <li class="w-full border-b border-gray-200 rounded-t-lg dark:border-gray-600">
                                 <div class="flex items-center ps-3">
-                                    <input id="permission_{{$permission->id}}" type="checkbox" name="selectedPermission[]" value="{{$permission->name}}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+                                    <input id="permission_{{$permission->id}}" type="checkbox" wire:model="selectedPermissions" value="{{$permission->name}}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
                                     <label for="permission_{{$permission->id}}" class="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{$permission->name}}</label>
                                 </div>
                             </li>

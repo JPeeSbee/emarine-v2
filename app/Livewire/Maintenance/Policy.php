@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use App\Models\Policy as PolicyModel;
 use Livewire\Attributes\Lazy;
 #[Lazy]
@@ -48,7 +47,7 @@ class Policy extends Component
         return '
             <div class="flex items-center justify-center w-full h-full">
                 <!-- Loading spinner... -->
-                <svg width="250px" height="250px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <svg width="100px" height="100px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
                         <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
                     </circle>
@@ -70,7 +69,7 @@ class Policy extends Component
 
     private function searchPolicy(): object
     {
-        return PolicyModel::when($this->search, function ($query) { 
+        return PolicyModel::relationship()->when($this->search, function ($query) { 
             $query->search($this->search); 
         })
         ->paginate(10);
@@ -79,9 +78,7 @@ class Policy extends Component
     public function mount(): void
     {
         $this->resetForm();
-        $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
-            return DB::table('agents')->whereNull('deleted_at')->get();
-        });
+        $this->agents = DB::table('agents')->whereNull('deleted_at')->get();
     }
 
     public function create(): void

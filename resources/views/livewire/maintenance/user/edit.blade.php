@@ -41,6 +41,30 @@
                         <em class="text-red-300 text-xs">{{ $message }}</em>
                     @enderror
                 </div>
+                <div class="relative col-span-2 z-0 w-full mb-5 p-2 group">
+                    <select wire:model='location_id' name="location_id" id="underline_select" class="block w-full py-2.5 px-2 text-sm text-gray-900 border-0 border-b-2 border-gray-300 bg-transparent focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <option selected>Select location</option>
+                        @foreach ($locations as $location)
+                            <option value="{{$location->id}}" class="text-black dark:text-white">{{$location->name .' | '. $location->address}}</option>
+                        @endforeach
+                    </select>
+                    @error('location_id')
+                        <em class="text-red-300 text-xs">{{ $message }}</em>
+                    @enderror
+                </div>
+                <div class="relative z-0 w-full mb-5 p-2 group">
+                    <select wire:model='role' name="role" id="underline_select" class="block w-full py-2.5 px-2 text-sm text-gray-900 border-0 border-b-2 border-gray-300 bg-transparent focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        <option value="{{$user->getRoleNames()->first()}}" selected>{{$user->getRoleNames()->first()}}</option>
+                        @foreach ($roles as $role)
+                            @if($role != $user->getRoleNames()->first())
+                                <option value="{{$role}}" class="text-black dark:text-white">{{$role}}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    @error('role')
+                        <em class="text-red-300 text-xs">{{ $message }}</em>
+                    @enderror
+                </div>
             </div>
             <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Update</button>
         </form>
