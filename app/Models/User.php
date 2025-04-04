@@ -24,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'location_id',
         'user_created',
         'user_modified',
     ];
@@ -62,9 +63,19 @@ class User extends Authenticatable
             ->implode('');
     }
 
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
     public function scopeSearch($query, $search)
     {
         return $query->where('name', 'like', '%'.$search.'%')
         ->orWhere('email', 'like', '%'.$search.'%');
+    }
+
+    public function scopeRelationship($query)
+    {
+        return $query->with(['location']);
     }
 }

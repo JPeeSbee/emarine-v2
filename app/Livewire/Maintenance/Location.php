@@ -4,9 +4,7 @@ namespace App\Livewire\Maintenance;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use App\Models\Location as LocationModel;
 use Livewire\Attributes\Lazy;
 #[Lazy]
@@ -26,7 +24,7 @@ class Location extends Component
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
             'lgt_tax_rate' => 'required|decimal:2',
-            'email_recepient' => 'required|string|max:255',
+            'email_recepient' => 'required|string',
         ];
     }
  
@@ -53,7 +51,7 @@ class Location extends Component
         return '
             <div class="flex items-center justify-center w-full h-full">
                 <!-- Loading spinner... -->
-                <svg width="250px" height="250px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <svg width="100px" height="100px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
                         <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
                     </circle>
@@ -84,9 +82,6 @@ class Location extends Component
     public function mount(): void
     {
         $this->resetForm();
-        // $this->agents = Cache::remember('agents', now()->addMinutes(30), function () {
-        //     return DB::table('agents')->whereNull('deleted_at')->get(); //need to put whereNull('deleted_at') so that we only get the active records
-        // });
     }
 
     public function create(): void
@@ -103,12 +98,11 @@ class Location extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'lgt_tax_rate' => $this->lgt_tax_rate,
-                'agent_id' => $this->agent_id,
                 'email_recepient' => $this->email_recepient,
                 'user_created' => Auth::id(),
                 'user_modified' => Auth::id(),
             ]);
-            Cache::forget('locations');
+            
             session()->flash('success','Location Created Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to create location!!');
@@ -142,11 +136,10 @@ class Location extends Component
                 "name" => $this->name,
                 "address" => $this->address,
                 "lgt_tax_rate" => $this->lgt_tax_rate,
-                "agent_id" => $this->agent_id,
                 "email_recepient" => $this->email_recepient,
                 "user_modified" => Auth::id(),
             ]);
-            Cache::forget('locations');
+            
             session()->flash('success','Location Updated Successfully!!');
         } catch (\Throwable $th) {
             session()->flash('error','Failed to update location!!');

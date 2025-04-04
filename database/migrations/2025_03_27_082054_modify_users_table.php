@@ -15,7 +15,6 @@ return new class extends Migration
             $table->smallInteger('user_modified')->after('email')->nullable();
             $table->smallInteger('user_created')->after('email')->nullable();
             $table->softDeletes('deleted_at')->after('email')->nullable();
-            $table->smallInteger('role_id')->after('email')->nullable();
             $table->foreignId('location_id')->after('email')->nullable()->index();
         });
     }
@@ -29,7 +28,6 @@ return new class extends Migration
             $table->dropColumn('user_modified');
             $table->dropColumn('user_created');
             $table->dropColumn('deleted_at');
-            $table->dropColumn('role_id');
             $table->dropColumn('location_id');
         });
     }
