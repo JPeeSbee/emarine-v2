@@ -10,15 +10,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role as RoleModel;
+use App\Http\Controllers\CheckPermission as Access;
 #[Lazy]
 class User extends Component
 {
     use WithPagination;
     
-    public $name, $email, $user, $role, $roles, $locations, $location_id;
+    public $name, $email, $user, $role, $role_list, $locations, $location_id;
     public bool $showUser, $editUser, $createUser;
     public int $editUserId, $showUserId, $userId;
-    public string $search = '';
+    public string $search = '', $title = 'User';
     protected $queryString = ['search' => ['except' => '']]; //for url queryString
     protected $password = 'maagap@2025';
 
@@ -51,16 +52,7 @@ class User extends Component
     }
 
     public function placeholder() {
-        return '
-            <div class="flex items-center justify-center w-full h-full">
-                <!-- Loading spinner... -->
-                <svg width="100px" height="100px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
-                        <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
-                    </circle>
-                </svg>
-            </div>
-        ';
+        return view('components.loading');
     }
 
     public function render()
@@ -76,18 +68,20 @@ class User extends Component
 
     private function searchUsers(): object
     {
-        return UserModel::relationship()->when($this->search, function ($query) { 
-            $query->search($this->search); 
-        })
-        ->latest()
-        ->paginate(10);
+        return UserModel::relationship()
+            ->when($this->search, function ($query) { 
+                $query->search($this->search); 
+            })
+            ->latest()
+            ->paginate(10);
     }
 
     public function mount(): void
     {
+        Access::checkPermission('User');
         $this->resetForm();
-        $this->roles = RoleModel::all()->pluck('name');
-        $this->locations = DB::table('locations')->whereNull('deleted_at')->orderBy('name', 'asc')->get(); //need to put whereNull('deleted_at') so that we only get the active records
+        $this->role_list = RoleModel::all()->pluck('name');
+        $this->locations = DB::table('locations')->whereNull('deleted_at')->orderBy('name', 'asc')->get();
     }
 
     public function create(): void
@@ -110,11 +104,10 @@ class User extends Component
             ]);
 
             $user->assignRole($this->role);
-        //     $role = RoleModel::where('name', $this->role)->first();
-        // dd($role->permission);
+            $user->givePermissionTo($user->getAllPermissions()->pluck('name')->toArray());
             session()->flash('success','User Created Successfully!!');
         } catch (\Throwable $th) {
-            session()->flash('error','Failed to create User!!');
+            session()->flash('error','Failed to create User!!'. ' '. $th->getMessage());
         }
         $this->createUser = false;
         // $this->redirect('/maintenance/user');
@@ -147,11 +140,13 @@ class User extends Component
                 'location_id' => $this->location_id,
                 'user_modified' => Auth::id(),
             ]);
-
+            $user->syncPermissions([]);
             $user->syncRoles($this->role);
+            $user->syncPermissions($user->getAllPermissions()->pluck('name')->toArray());
+
             session()->flash('success','User Updated Successfully!!');
         } catch (\Throwable $th) {
-            session()->flash('error','Failed to update user!!');
+            session()->flash('error','Failed to update user!!'.$th->getMessage());
         }
         $this->editUser = false;
         // $this->redirect('/maintenance/user');
@@ -191,6 +186,6 @@ class User extends Component
 
     private function findUser($userId): object
     {
-        return UserModel::findOrFail($userId);
+        return UserModel::with('roles')->findOrFail($userId);
     }
 }

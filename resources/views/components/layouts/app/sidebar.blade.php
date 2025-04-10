@@ -16,52 +16,55 @@
             </flux:navlist>
             @hasanyrole('Encoder|Super-Admin')
                 @can('Certificate Issuance')
-                <flux:navlist variant="outline">
-                    <flux:navlist.group :heading="__('Issuance')" class="grid">
-                        <flux:navlist.item icon="clipboard-document" :href="route('marine-issuance')" :current="(strpos(url()->current(), route('marine-issuance')) !== false)">{{ __('Certificate Issuance') }}</flux:navlist.item>
-                    </flux:navlist.group>
-                </flux:navlist>
+                    <flux:navlist variant="outline">
+                        <flux:navlist.group :heading="__('Issuance')" class="grid">
+                            <flux:navlist.item icon="clipboard-document" :href="route('marine-issuance')" :current="(strpos(url()->current(), route('marine-issuance')) !== false)">{{ __('Certificate Issuance') }}</flux:navlist.item>
+                        </flux:navlist.group>
+                    </flux:navlist>
                 @endcan
 
-                @if(auth()->user()->hasAnyPermission(['Posted Certificate', 'Certificate Summary']))
-                <flux:navlist variant="outline">
-                    <flux:navlist.group :heading="__('Reports')" class="grid">
-                        @can('Posted Certificate')
-                            <flux:navlist.item icon="document-text" :href="route('report.posted')" :current="(strpos(url()->current(), route('report.posted')) !== false)">{{ __('Posted Certificate') }}</flux:navlist.item>
-                        @endcan
-                        @can('Certificate Summary')
-                            <flux:navlist.item icon="folder-open" :href="route('report.summary')" :current="(strpos(url()->current(), route('report.summary')) !== false)">{{ __('Certificate Summary') }}</flux:navlist.item>
-                        @endcan
-                    </flux:navlist.group>
-                </flux:navlist>
-                @endif
+                @can(['Posted Certificate','Certificate Summary'])
+                    <flux:navlist variant="outline">
+                        <flux:navlist.group :heading="__('Reports')" class="grid">
+                            @can('Posted Certificate')
+                                <flux:navlist.item icon="document-text" :href="route('report.posted')" :current="(strpos(url()->current(), route('report.posted')) !== false)">{{ __('Posted Certificate') }}</flux:navlist.item>
+                            @endcan
+                            @can('Certificate Summary')
+                                <flux:navlist.item icon="folder-open" :href="route('report.summary')" :current="(strpos(url()->current(), route('report.summary')) !== false)">{{ __('Certificate Summary') }}</flux:navlist.item>
+                            @endcan
+                        </flux:navlist.group>
+                    </flux:navlist>
+                @endcan
             @endrole
             @hasanyrole('Admin|Super-Admin')
-                @if(auth()->user()->hasAnyPermission(['User', 'Role', 'Agent', 'Location', 'Policy', 'System Settings']))
-                <flux:navlist variant="outline">
-                    <flux:navlist.group :heading="__('Maintenance')" class="grid">
-                        @can('User')
-                            <flux:navlist.item icon="user" :href="route('maintenance.user')" :current="(strpos(url()->current(), route('maintenance.user')) !== false)">{{ __('User') }}</flux:navlist.item>
-                        @endcan
-                        @can('Role')
-                            <flux:navlist.item icon="key" :href="route('maintenance.role')" :current="(strpos(url()->current(), route('maintenance.role')) !== false)">{{ __('Role') }}</flux:navlist.item>
-                        @endcan
-                        @can('Agent')
-                            <flux:navlist.item icon="identification" :href="route('maintenance.agent')" :current="(strpos(url()->current(), route('maintenance.agent')) !== false)">{{ __('Agent') }}</flux:navlist.item>
-                        @endcan
-                        @can('Location')
-                            <flux:navlist.item icon="globe-alt" :href="route('maintenance.location')" :current="(strpos(url()->current(), route('maintenance.location')) !== false)">{{ __('Location') }}</flux:navlist.item>
-                        @endcan
-                        @can('Policy')
-                            <flux:navlist.item icon="book-open" :href="route('maintenance.policy')" :current="(strpos(url()->current(), route('maintenance.policy')) !== false)">{{ __('Policy') }}</flux:navlist.item>
-                        @endcan
-                        @can('System Settings')
-                            <flux:navlist.item icon="wrench" :href="route('maintenance.system-setting')" :current="(strpos(url()->current(), route('maintenance.system-setting')) !== false)">{{ __('System Settings') }}</flux:navlist.item>
-                        @endcan
-                    </flux:navlist.group>
-                </flux:navlist>
+                @can(['User', 'Role', 'Agent', 'Location', 'Policy', 'System Settings'])
+                    <flux:navlist variant="outline">
+                        <flux:navlist.group :heading="__('Maintenance')" class="grid">
+                            @can('User')
+                                <flux:navlist.item icon="user" :href="route('maintenance.user')" :current="(strpos(url()->current(), route('maintenance.user')) !== false)">{{ __('User') }}</flux:navlist.item>
+                            @endcan
+                            @can('Role')
+                                <flux:navlist.item icon="key" :href="route('maintenance.role')" :current="(strpos(url()->current(), route('maintenance.role')) !== false)">{{ __('Role') }}</flux:navlist.item>
+                            @endcan
+                            @can('Agent')
+                                <flux:navlist.item icon="identification" :href="route('maintenance.agent')" :current="(strpos(url()->current(), route('maintenance.agent')) !== false)">{{ __('Agent') }}</flux:navlist.item>
+                            @endcan
+                            @can('Location')
+                                <flux:navlist.item icon="globe-alt" :href="route('maintenance.location')" :current="(strpos(url()->current(), route('maintenance.location')) !== false)">{{ __('Location') }}</flux:navlist.item>
+                            @endcan
+                            @can('Policy')
+                                <flux:navlist.item icon="book-open" :href="route('maintenance.policy')" :current="(strpos(url()->current(), route('maintenance.policy')) !== false)">{{ __('Policy') }}</flux:navlist.item>
+                            @endcan
+                            @can('Coverage')
+                                <flux:navlist.item icon="clipboard-document-list" :href="route('maintenance.coverage')" :current="(strpos(url()->current(), route('maintenance.policy')) !== false)">{{ __('Coverage') }}</flux:navlist.item>
+                            @endcan
+                            @can('System Settings')
+                                <flux:navlist.item icon="wrench" :href="route('maintenance.system-setting')" :current="(strpos(url()->current(), route('maintenance.system-setting')) !== false)">{{ __('System Settings') }}</flux:navlist.item>
+                            @endcan
+                        </flux:navlist.group>
+                    </flux:navlist>
                 @endif
-            @endrole
+            @endcan
             <flux:spacer />
 
             <!-- Desktop User Menu -->

@@ -1,12 +1,10 @@
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-    {{-- <x-includes.header :header="'Users'"/>
-    <x-includes.message /> --}}
     <!-- content -->
     <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
         <!-- header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                Edit User
+                Edit {{$title}}
                 </h3>
             <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-hide="default-modal">
                 <flux:navlist.item icon="arrow-left" :href="route('maintenance.user')" wire:navigate/>
@@ -55,7 +53,7 @@
                 <div class="relative z-0 w-full mb-5 p-2 group">
                     <select wire:model='role' name="role" id="underline_select" class="block w-full py-2.5 px-2 text-sm text-gray-900 border-0 border-b-2 border-gray-300 bg-transparent focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                         <option value="{{$user->getRoleNames()->first()}}" selected>{{$user->getRoleNames()->first()}}</option>
-                        @foreach ($roles as $role)
+                        @foreach ($role_list as $role)
                             @if($role != $user->getRoleNames()->first())
                                 <option value="{{$role}}" class="text-black dark:text-white">{{$role}}</option>
                             @endif

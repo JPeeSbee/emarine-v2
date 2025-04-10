@@ -1,5 +1,6 @@
 <?php
 
+// use App\Http\Middleware\CheckPermission;
 use App\Livewire\Report\Posted;
 use App\Livewire\Report\Summary;
 use App\Livewire\Maintenance\Role;
@@ -10,6 +11,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Maintenance\Policy;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Maintenance\Coverage;
 use App\Livewire\Maintenance\Location;
 use App\Livewire\Issuance\MarineIssuance;
 use App\Livewire\Maintenance\SystemSetting;
@@ -31,6 +33,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('appearance', Appearance::class)->name('settings.appearance');
     });
 
+    // Marine Issuance - requires both Encoder role AND Certificate Issuance permission
+    Route::get('/marine-issuance', MarineIssuance::class)
+        ->middleware(['permission:Certificate Issuance'])
+        ->name('marine-issuance');
+    
     // Report routes - require both Encoder role AND specific permissions
     Route::prefix('report')->group(function() {
         Route::redirect('report', 'report/posted');
@@ -41,11 +48,6 @@ Route::middleware(['auth'])->group(function () {
             ->middleware(['permission:Certificate Summary'])
             ->name('report.summary');
     });
-    
-    // Marine Issuance - requires both Encoder role AND Certificate Issuance permission
-    Route::get('/marine-issuance', MarineIssuance::class)
-        ->middleware(['permission:Certificate Issuance'])
-        ->name('marine-issuance');
 
     // Maintenance routes - require both Admin role AND specific permissions
     Route::prefix('maintenance')->group(function() {
@@ -59,6 +61,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('policy', Policy::class)
             ->middleware(['permission:Policy'])
             ->name('maintenance.policy');
+        Route::get('coverage', Coverage::class)
+            ->middleware(['permission:Coverage'])
+            ->name('maintenance.coverage');
         Route::get('role', Role::class)
             ->middleware(['permission:Role'])
             ->name('maintenance.role');

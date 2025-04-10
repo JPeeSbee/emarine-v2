@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Agent as AgentModel;
 use Livewire\Attributes\Lazy;
+use App\Http\Controllers\CheckPermission as Access;
 #[Lazy]
 class Agent extends Component
 {
@@ -16,7 +17,7 @@ class Agent extends Component
     public $code, $name, $email, $locations, $location_id, $agent;
     public bool $showAgent, $editAgent, $createAgent;
     public int $editAgentId, $showAgentId, $agentId;
-    public string $search = '';
+    public string $search = '', $title = 'Agent';
     protected $queryString = ['search' => ['except' => '']];
 
     protected function rules(): array 
@@ -49,16 +50,7 @@ class Agent extends Component
     }
 
     public function placeholder() {
-        return '
-            <div class="flex items-center justify-center w-full h-full">
-                <!-- Loading spinner... -->
-                <svg width="100px" height="100px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="25" cy="25" r="20" fill="none" stroke="#fdd700" stroke-width="3" stroke-dasharray="90" stroke-dashoffset="0" stroke-linecap="round">
-                        <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
-                    </circle>
-                </svg>
-            </div>
-        ';
+        return view('components.loading');
     }
 
     public function render()
@@ -82,6 +74,7 @@ class Agent extends Component
 
     public function mount(): void
     {
+        Access::checkPermission('Agent');
         $this->resetForm();
         $this->locations = DB::table('locations')->whereNull('deleted_at')->get(); //need to put whereNull('deleted_at') so that we only get the active records
     }
