@@ -54,17 +54,20 @@ class UserRolesAndPermissionSeeder extends Seeder
              'email' => 'underwriting@maagap.com',
          ]);
          $underwriting->assignRole($encoder);
+         $underwriting->givePermissionTo($underwriting->getAllPermissions()->pluck('name')->toArray());
  
          $adminUser = \App\Models\User::factory()->create([
              'name' => 'Marine Admin',
              'email' => 'admin@maagap.com',
          ]);
          $adminUser->assignRole($admin);
+         $adminUser->givePermissionTo($adminUser->getAllPermissions()->pluck('name')->toArray());
  
          $superUser = \App\Models\User::factory()->create([
-             'name' => 'Example Super-Admin User',
+             'name' => 'Marine Super-Admin',
              'email' => 'superadmin@maagap.com',
          ]);
          $superUser->assignRole($superAdmin);
-    }
+         $superUser->givePermissionTo($superUser->getAllPermissions()->pluck('name')->toArray());
+        }
 }

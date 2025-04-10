@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasPermissions;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasRoles, HasPermissions, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -76,6 +77,6 @@ class User extends Authenticatable
 
     public function scopeRelationship($query)
     {
-        return $query->with(['location']);
+        return $query->with(['location','roles']);
     }
 }

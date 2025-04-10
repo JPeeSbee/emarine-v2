@@ -4,7 +4,7 @@
         <!-- header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                Add Policy
+                Add {{$title}}
                 </h3>
             <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-hide="default-modal">
                 <flux:navlist.item icon="arrow-left" :href="route('maintenance.policy')" wire:navigate/>
@@ -16,7 +16,7 @@
                 <div class="relative z-0 w-full mb-5 p-2 group"> 
                     <input wire:model='policy_number' type="text" name="policy_number" id="policy_number" value="{{old('policy_number')}}" class="block py-2.5 px-2 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=""/>
                     <label for="policy_number" class="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4">
-                        Policy Number
+                        {{$title}} Number
                     </label>
                     @error('policy_number')
                         <em class="text-red-300 text-xs">{{ $message }}</em>

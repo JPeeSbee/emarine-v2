@@ -69,7 +69,6 @@ return new class extends Migration
             $table->decimal('markup_percent', 4, 2);
             $table->decimal('markup_amount', 15, 2)->default(0.00);
             $table->decimal('sum_insured', 15, 2)->default(0.00);
-            $table->decimal('rate_percent', 4, 4)->default(0.0000);
             $table->decimal('premium', 15, 6)->default(0.000000);
             $table->softDeletes('deleted_at');
             $table->smallInteger('user_created');
